@@ -1,17 +1,18 @@
 from flask import Flask, Blueprint,session, render_template, request, redirect, url_for, flash, current_app
 from werkzeug.utils import secure_filename
-from python_script import run_jobs;
+from python_script import run_job_in_thread;
 import threading
 import asyncio
 import os
 import psutil
 
-UPLOAD_FOLDER = 'bre_uploads/'
+BRE_INPUT_FOLDER = 'bre_inputs/'
+BRE_OUTPUT_FOLDER = 'bre_outputs/'
 ALLOWED_EXTENSIONS = {'.txt'}
 
-def run_jobs_in_thread(items):
+def run_bre_job_in_thread(uploaded_filenames):
     def target():
-        result = asyncio.run(run_jobs(items))
+        result = asyncio.run(run_job_in_thread(uploaded_filenames))
         print(result)
 
     thread = threading.Thread(target=target)
@@ -36,9 +37,9 @@ def allowed_bre_file(filename):
     print(file_extension)
     return file_extension.lower() in ALLOWED_EXTENSIONS
 
-def create_upload_folder():
-    if not os.path.exists(UPLOAD_FOLDER):
-        os.makedirs(UPLOAD_FOLDER)
+def create_folder(FOLDER_PATH):
+    if not os.path.exists(FOLDER_PATH):
+        os.makedirs(FOLDER_PATH)
 
 # Route for handling the upload page
 
