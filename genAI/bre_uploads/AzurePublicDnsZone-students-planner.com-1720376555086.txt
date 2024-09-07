@@ -1,0 +1,54 @@
+; 	Exported zone file from Azure DNS
+; 	Zone name: students-planner.com
+; 	Date and time (UTC): Sun, 07 Jul 2024 18:22:35 GMT
+
+$TTL 300
+$ORIGIN students-planner.com
+
+; SOA Record
+@	 3600		IN	SOA	ns1-32.azure-dns.com.	azuredns-hostmaster.microsoft.com	(
+	 	 	1	 ;serial
+	 	 	3600	 ;refresh
+	 	 	300	 ;retry
+	 	 	2419200	 ;expire
+	 	 	300	 ;minimum ttl
+)
+
+; NS Records
+@	172800	IN	NS	ns1-32.azure-dns.com.
+@	172800	IN	NS	ns2-32.azure-dns.net.
+@	172800	IN	NS	ns3-32.azure-dns.org.
+@	172800	IN	NS	ns4-32.azure-dns.info.
+
+; MX Records
+
+; A Records
+@	3600	IN	A	172.171.137.226
+
+; AAAA Records
+
+; CNAME Records
+www	3600	IN	CNAME	studentplanner.azurewebsites.net
+
+; PTR Records
+
+; TXT Records
+@	1800	IN	TXT	"zoho-verification=zb85025917.zmverify.zoho.com"
+asuid	3600	IN	TXT	"8599ECB3A1389E11FDDFDA9365DA8392D09ADC9A5B26886832F3F456DC1B73A9"
+asuid.www	3600	IN	TXT	"8599ECB3A1389E11FDDFDA9365DA8392D09ADC9A5B26886832F3F456DC1B73A9"
+students-planner.com	1800	IN	TXT	"ms-domain-verification=3d9cac97-3623-4cdb-81f0-9329a10d5281"
+
+; SRV Records
+
+; SPF Records
+
+; CAA Records
+
+; DS Records
+
+; TLSA Records
+
+; Azure Alias Records
+
+; Azure TmLink Records
+

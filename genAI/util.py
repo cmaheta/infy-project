@@ -1,13 +1,16 @@
-from flask import Flask, Blueprint, render_template, request, redirect, url_for, flash
-import os
+from flask import Flask, Blueprint,session, render_template, request, redirect, url_for, flash, current_app
 from werkzeug.utils import secure_filename
-import pandas as pd
+from python_script import run_jobs;
+import threading
+import asyncio
+import os
 
-UPLOAD_FOLDER = 'uploads/'
-ALLOWED_EXTENSIONS = {'.xlsx', '.xls', '.csv'}
+UPLOAD_FOLDER = 'bre_uploads/'
+ALLOWED_EXTENSIONS = {'.txt'}
+
 
 # Helper function to check allowed file extensions
-def allowed_file(filename):
+def allowed_bre_file(filename):
     file_extension = os.path.splitext(filename)[1].lower() 
     print(file_extension)
     return file_extension.lower() in ALLOWED_EXTENSIONS

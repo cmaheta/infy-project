@@ -10,12 +10,12 @@
 <body>
     <div class="container">
         <h3>Checkboxed List with Materialize</h3>
-        <form action="/" method="GET">
+        <form action="/running-jobs" method="GET">
             <ul class="collection">
                 {% for job in jobs %}
                 <li class="collection-item">
                     <label>
-                        <input type="checkbox" name="items" value="{{ item }}"/>
+                        <input type="checkbox" name="jobs" value="{{ job }}"/>
                         <span>{{ job }}</span>
                     </label>
                 </li>
