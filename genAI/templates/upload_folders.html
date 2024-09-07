@@ -91,21 +91,8 @@
         if (inputFields.length > 1) {
             wrapper.removeChild(inputFields[inputFields.length - 1]);
         }
-    });
+        });
 
-    const form = document.getElementById('bre_form');
-
-    form.addEventListener('submit', function(event) {
-
-        event.preventDefault();
-        
-        const buttons = document.querySelectorAll('button');
-        // Iterate over each button and disable it
-        buttons.forEach(button => button.disabled = true);
-        
-        form.submit();
-            
-    });
     </script>
 </body>
 </html>

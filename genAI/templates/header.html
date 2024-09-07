@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}My App{% endblock %}</title>
+    <!-- Include any CSS or JS files here -->
+</head>
+<body>
+    <!-- Common Header -->
+    <div style="display: flex; justify-content: space-between; border-bottom: 3px solid transparent; border-image: linear-gradient(to right, #a2e4b9, #099b74); border-image-slice: 1;">
+        <div>
+            <h3 style="color: hwb(164 7% 45%); padding-left: 20px;">GEN-AI APP</h3>
+        </div>
+        <div style="margin-top: 25px; padding-right: 20px;">
+            <form method="POST" action="/upload-file" id="bre_form" enctype="multipart/form-data">
+                <button type="button" id="bre_downloads" class="btn waves-effect waves-light">BRE-Downloads</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Page Content -->
+    <div class="content">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
