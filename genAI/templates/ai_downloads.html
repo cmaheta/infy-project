@@ -1,7 +1,13 @@
 {% extends "header.html" %}
-
-{% block title %}BRE-DOWNLOADS{% endblock %}
-
+{% block title %}
+{% if flag_value == 'bre' %}
+            BRE-DOWNLOADS
+        {% elif flag_value == 'fe' %}
+            FE-DOWNLOADS
+        {% else %}
+            GEN-AI APP
+        {% endif %}
+{% endblock %}
 {% block content %}
 <style>
         .file-list {
@@ -40,7 +46,7 @@
             height: 80%;
         }
         .close {
-            color: #aaa;
+            color: hwb(158 6% 35%);
             float: right;
             font-size: 28px;
             font-weight: bold;
@@ -51,15 +57,19 @@
             text-decoration: none;
             cursor: pointer;
         }
+        .swal2-title {
+            font-size: 16px !important;
+        }
 </style>
 <div class="container">
 <h3>Choose file to download</h3>
 <ul class="file-list">
     {% for file in files %}
     <li>
-        <a style="font-size: large;" href="{{ url_for('views.bre_download_file', filename=file) }}">
+        <a style="font-size: large;" href="{{ url_for('views.ai_download_file', filename=file) }}">
             {{ file }}</a>
         <button style="margin-left: 20px;" type="button" class="btn waves-effect waves-light" onclick="previewFile('{{ file }}')">Preview</button>
+        <button style="margin-left: 20px;" type="button" class="btn waves-effect waves-light" onclick="deleteFile('{{ file }}')">Delete</button>
     </li>
     {% endfor %}
 </ul>
@@ -76,6 +86,8 @@
 
     <!-- Include Materialize JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-    <script src="/static/bre-downloads.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/static/ai-downloads.js"></script>
 {% endblock %}
     

@@ -1,0 +1,10 @@
+* ASM Example
+         START 0
+         USING *,15
+
+         LA    1,=A(DSPMSG)  * Load address of the message
+         WTO   'Hello, Mainframe!' * Write to operator console
+
+         RETURN
+         END
+DSPMSG   DC    C'Hello, Mainframe!'

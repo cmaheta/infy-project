@@ -1,11 +1,17 @@
 {% extends "header.html" %}
-
-{% block title %}BRE-PROCESSES{% endblock %}
-
+{% block title %}
+{% if flag_value == 'bre' %}
+            BRE-PROCESSES
+        {% elif flag_value == 'fe' %}
+            FE-PROCESSES
+        {% else %}
+            GEN-AI APP
+        {% endif %}
+{% endblock %}
 {% block content %}
     <!-- Your page-specific content here -->
     <div class="container">
-        <h3>Choose mainframe code</h3>
+        <h3> {% if flag_value == 'bre' %} Choose mainframe code for BRE {% else %} Choose file to process for FE {% endif %}</h3>
         <!-- Flash messages for upload feedback -->
         {% with messages = get_flashed_messages() %}
             {% if messages %}
@@ -20,7 +26,7 @@
         {% endwith %}
         
         <!-- Form to upload the file -->
-        <form method="POST" action="/bre-uploads" id="bre_form" enctype="multipart/form-data">
+        <form method="POST" action="/ai-uploads" id="ai_form" enctype="multipart/form-data">
             <div id="fileInputsWrapper">
                 <div class="file-field input-field">
                     <div class="btn">
@@ -32,6 +38,7 @@
                     </div>
                 </div>
             </div>
+            <input type="hidden" name="flag" id="formFlagInput">
             <button type="button" id="addFolderBtn" class="btn waves-effect waves-light">+</button>
             <button type="button" id="removeFolderBtn" class="btn waves-effect waves-light">-</button>
             <br><br>
@@ -45,6 +52,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 
     <!-- Include your custom JavaScript -->
-    <script src="/static/bre-processes.js"></script>
+    <script src="/static/ai-processes.js"></script>
 {% endblock %}
     

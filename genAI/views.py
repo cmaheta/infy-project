@@ -1,68 +1,78 @@
 from flask import Flask, Blueprint, session,flash, jsonify,render_template, request, redirect, url_for, send_from_directory
-import subprocess
-from util import run_bre_job_in_thread, check_system_resources_exhausted, create_folder, allowed_bre_file
-from util import BRE_INPUT_FOLDER, BRE_OUTPUT_FOLDER
-from werkzeug.utils import secure_filename
+from util import check_system_resources_exhausted, create_folders, process_files, get_output_folder, list_download_files
 import os
-
 
 views = Blueprint(__name__, "views")
 
-@views.route('/bre-processes' , methods=['GET','POST'])
-def bre_processes():
-    return render_template('bre_processes.html')
+@views.route('/')
+def home():
+    return render_template('home.html')
 
-@views.route('/bre-uploads' , methods=['GET','POST'])
-def bre_uploads():
+@views.route('/ai-processes' , methods=['GET','POST'])
+def ai_processes():
+    flag_value = request.form.get('flag')
+    print(f"Flag value received: {flag_value}")
+    session['flag_value'] = flag_value
+
     if request.method == 'POST':
-            if not check_system_resources_exhausted():
-                flash("Can not upload your files. \n\n System resources exhausted. \n\n Please wait and try again.")
-                return render_template('bre_processes.html')
+        return render_template('ai_processes.html',flag_value=flag_value)
+    else:
+        return redirect(url_for("views.home"))
 
-            create_folder(BRE_INPUT_FOLDER) 
+@views.route('/ai-uploads' , methods=['GET','POST'])
+def ai_uploads():
+    if request.method == 'POST':
+        flag_value = session.get('flag_value', '')
+        if not check_system_resources_exhausted():
+            flash("Can not upload your files. \n\n System resources exhausted. \n\n Please wait and try again.")
+            return render_template('ai_processes.html')
             
-            if 'files[]' not in request.files:
-                flash("No files selected.")
-
+        if 'files[]' not in request.files:
+            flash("No files selected.")
+        else:
             files = request.files.getlist('files[]')
-            uploaded_filenames = []
+            create_folders()
+            process_files(files)
+        
+        return render_template('ai_processes.html', flag_value=flag_value)
+    else:
+        return redirect(url_for("views.home"))    
 
-            for file in files:
-                if file.filename == '':
-                    continue 
-                filename = secure_filename(file.filename)
-                if allowed_bre_file(filename):
-                    file.save(os.path.join(BRE_INPUT_FOLDER, filename))
-                    uploaded_filenames.append(filename)
-                
-            if len(uploaded_filenames) > 0:
-                run_bre_job_in_thread(uploaded_filenames)
-                flash("Processing your files. Please check bre-downloads.")
-                return render_template('bre_processes.html')
-            else:
-                flash("No file with .txt extension. Nothing to process.")
+@views.route('/ai-downloads', methods=['GET','POST'])
+def ai_downloads():
+    flag_value = request.form.get('flag')
+    print(f"Flag value received: {flag_value}")
+    session['flag_value'] = flag_value
 
-    return render_template('bre_processes.html')
+    if request.method == 'POST':
+        create_folders() 
+        files = list_download_files()
+        return render_template('ai_downloads.html', files=files, flag_value=flag_value)
+    else:
+        return redirect(url_for("views.home"))    
 
-@views.route('/bre-downloads', methods=['GET','POST'])
-def bre_downloads():
-    create_folder(BRE_OUTPUT_FOLDER) 
-    files = os.listdir(BRE_OUTPUT_FOLDER)
-    return render_template('bre_downloads.html', files=files)
-
-@views.route('/bre-download-file/<filename>')
-def bre_download_file(filename,  methods=['GET','POST']):
-    return send_from_directory(BRE_OUTPUT_FOLDER, filename, as_attachment=True)
+@views.route('/ai-download-file/<filename>')
+def ai_download_file(filename,  methods=['POST']):
+    return send_from_directory(get_output_folder(), filename, as_attachment=True)
 
 @views.route('/preview/<filename>')
 def preview_file(filename):
     try:
-        with open(os.path.join(BRE_OUTPUT_FOLDER, filename), 'r') as file:
+        with open(os.path.join(get_output_folder(), filename), 'r') as file:
             content = file.read()
         return jsonify({'content': content})
     except Exception as e:
         return jsonify({'error': str(e)})    
 
-@views.route('/')
-def home():
-    return render_template('home.html')
+@views.route('/delete-file/<filename>', methods=['DELETE'])
+def delete_file(filename):
+    try:
+        # Construct full file path
+        file_path = os.path.join(get_output_folder(), filename)
+
+        # Check if file exists
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            return jsonify({"message": f"{filename} deleted successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500    
