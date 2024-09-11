@@ -6,53 +6,45 @@ import asyncio
 import os
 import psutil
 import uuid
+import json
 
 BRE_INPUT_FOLDER = 'bre_inputs/'
 BRE_OUTPUT_FOLDER = 'bre_outputs/'
 FE_INPUT_FOLDER = 'fe_inputs/'
 FE_OUTPUT_FOLDER = 'fe_outputs/'
 
-ALLOWED_EXTENSIONS = {'.txt'}
+ALLOWED_EXTENSIONS = {'.txt', '.docx'}
 
 
-def run_job_in_thread(uploaded_filenames, unique_id):
-    def target_bre():
-        result = asyncio.run(run_bre_job_in_thread(uploaded_filenames, unique_id))
-        print(result)
+def run_job_in_thread(uploaded_filenames, process_type):
+    def target_run(process_type):
 
-    def target_fe():
-        result = asyncio.run(run_fe_job_in_thread(uploaded_filenames, unique_id))
+        status = {"progress": 25, "message": "Processing files..."}
+
+        with open('status.json', 'w') as status_file:
+            json.dump(status, status_file)
+
+        if process_type == 'bre':
+            print('bre job is running')
+            result = asyncio.run(run_bre_job_in_thread(uploaded_filenames))
+
+        if process_type == 'fe':
+            print('fe job is running') 
+            result = asyncio.run(run_fe_job_in_thread(uploaded_filenames))
+
+        status = {"progress": 100, "message": "Process complete."}
+    
+        with open('status.json', 'w') as status_file:
+            json.dump(status, status_file)
+
         print(result)
         
-    flag_value = session.get('flag_value', '')
-    print(f"Flag value received: {flag_value}")
-
-    if flag_value == 'bre':
-        print("bre job is running")
-        thread = threading.Thread(target=target_bre)
-        thread.start()
-
-    if flag_value == 'fe':
-        print("fe job is running")
-        thread = threading.Thread(target=target_fe)
-        thread.start()
-    
-def check_system_resources_exhausted():
-    memory_threshold = 80  # in percentage
-    cpu_threshold = 80     # in percentage
-
-    memory_usage = psutil.virtual_memory().percent
-    cpu_usage = psutil.cpu_percent(interval=1)
-    print(f"memory usage is {memory_usage}")
-    print(f"cpu usage is {cpu_usage}")
-    if memory_usage > memory_threshold or cpu_usage > cpu_threshold:
-        return False
-    return True
+    thread = threading.Thread(target=lambda: target_run(process_type))
+    thread.start()
 
 # Helper function to check allowed file extensions
 def allowed_file(filename):
     file_extension = os.path.splitext(filename)[1].lower() 
-    print(file_extension)
     return file_extension.lower() in ALLOWED_EXTENSIONS
 
 def create_folders():
@@ -71,7 +63,7 @@ def create_folders():
 def list_download_files():
     return os.listdir(get_output_folder())
 
-def process_files(files):
+def process_files(files, process_type):
     uploaded_filenames = []
     
     for file in files:
@@ -82,43 +74,24 @@ def process_files(files):
             file.save(os.path.join(get_input_folder(), filename))
             uploaded_filenames.append(filename)
 
-    run_jobs(uploaded_filenames)
-
-def run_jobs(uploaded_filenames):
-    if len(uploaded_filenames) > 0:
-        unique_id = uuid.uuid4()
-        run_job_in_thread(uploaded_filenames, unique_id)
-        flash(f"Processing your files. Your unique jobID is {unique_id}.")
-        flash(f"Please check {get_download_text()}")
-    else:
-        flash("No file with .txt extension. Nothing to process.")
+    run_job_in_thread(uploaded_filenames, process_type)
 
 def get_output_folder():
-    flag_value = session.get('flag_value', '')
-    print(f"Flag value received: {flag_value}")
+    process_type = session.get('process_type', '')
+    print(f"Flag value received: {process_type}")
 
-    if flag_value == 'bre':
+    if process_type == 'bre':
         return BRE_OUTPUT_FOLDER
     
-    if flag_value == 'fe':
+    if process_type == 'fe':
         return FE_OUTPUT_FOLDER
 
 def get_input_folder():
-    flag_value = session.get('flag_value', '')
-    print(f"Flag value received: {flag_value}")
+    process_type = session.get('process_type', '')
+    print(f"Flag value received: {process_type}")
 
-    if flag_value == 'bre':
+    if process_type == 'bre':
         return BRE_INPUT_FOLDER
 
-    if flag_value == 'fe':
+    if process_type == 'fe':
         return FE_INPUT_FOLDER
-
-def get_download_text():
-    flag_value = session.get('flag_value', '')
-    print(f"Flag value received: {flag_value}")
-
-    if flag_value == 'bre':
-        return 'BRE-DOWNLOADS'
-
-    if flag_value == 'fe':
-        return 'FE-DOWNLOADS'

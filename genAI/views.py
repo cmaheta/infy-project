@@ -1,78 +1,71 @@
 from flask import Flask, Blueprint, session,flash, jsonify,render_template, request, redirect, url_for, send_from_directory
-from util import check_system_resources_exhausted, create_folders, process_files, get_output_folder, list_download_files
+from util import create_folders, process_files,get_input_folder, get_output_folder, list_download_files
 import os
+import json
+from docx import Document
+from werkzeug.utils import secure_filename
+
 
 views = Blueprint(__name__, "views")
 
 @views.route('/')
 def home():
-    return render_template('home.html')
+    return render_template('ai_processes.html')
 
-@views.route('/ai-processes' , methods=['GET','POST'])
+@views.route('/ai-processes' , methods=['POST'])
 def ai_processes():
-    flag_value = request.form.get('flag')
-    print(f"Flag value received: {flag_value}")
-    session['flag_value'] = flag_value
-
     if request.method == 'POST':
-        return render_template('ai_processes.html',flag_value=flag_value)
-    else:
-        return redirect(url_for("views.home"))
-
-@views.route('/ai-uploads' , methods=['GET','POST'])
-def ai_uploads():
-    if request.method == 'POST':
-        flag_value = session.get('flag_value', '')
-        if not check_system_resources_exhausted():
-            flash("Can not upload your files. \n\n System resources exhausted. \n\n Please wait and try again.")
-            return render_template('ai_processes.html')
-            
+        process_type = request.form.get('process-type')
+        if process_type:
+            session['process_type'] = process_type
+        
         if 'files[]' not in request.files:
             flash("No files selected.")
+            return render_template('ai_downloads.html', files=[])
         else:
             files = request.files.getlist('files[]')
             create_folders()
-            process_files(files)
-        
-        return render_template('ai_processes.html', flag_value=flag_value)
-    else:
-        return redirect(url_for("views.home"))    
+            process_files(files, process_type)
+            files = list_download_files()
+    status = {"progress": 0, "message": "Process started"}
+    return jsonify(status)       
 
-@views.route('/ai-downloads', methods=['GET','POST'])
-def ai_downloads():
-    flag_value = request.form.get('flag')
-    print(f"Flag value received: {flag_value}")
-    session['flag_value'] = flag_value
-
-    if request.method == 'POST':
-        create_folders() 
-        files = list_download_files()
-        return render_template('ai_downloads.html', files=files, flag_value=flag_value)
-    else:
-        return redirect(url_for("views.home"))    
-
-@views.route('/ai-download-file/<filename>')
-def ai_download_file(filename,  methods=['POST']):
+@views.route('/ai-download-file/<filename>', methods=['GET'])
+def ai_download_file(filename):
     return send_from_directory(get_output_folder(), filename, as_attachment=True)
 
 @views.route('/preview/<filename>')
 def preview_file(filename):
     try:
-        with open(os.path.join(get_output_folder(), filename), 'r') as file:
-            content = file.read()
+        if os.path.splitext(filename)[1].lower() == '.docx':
+            doc = Document(get_input_folder()+filename)
+            content = ''
+            for paragraph in doc.paragraphs:
+                content += paragraph.text
+                content += "\n"
+        else:        
+            with open(os.path.join(get_output_folder(), filename), 'r') as file:
+                content = file.read()
         return jsonify({'content': content})
     except Exception as e:
         return jsonify({'error': str(e)})    
 
-@views.route('/delete-file/<filename>', methods=['DELETE'])
+@views.route('/delete-file/<filename>', methods=['POST'])
 def delete_file(filename):
     try:
-        # Construct full file path
+        process_type = request.form.get('process-type')
+        if process_type:
+            session['process_type'] = process_type
         file_path = os.path.join(get_output_folder(), filename)
-
-        # Check if file exists
+        print(file_path)
         if os.path.exists(file_path):
             os.remove(file_path)
             return jsonify({"message": f"{filename} deleted successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500    
+
+@views.route('/check_status', methods=['GET'])
+def check_status():
+    with open('status.json') as status_file:
+        status = json.load(status_file)
+    return jsonify(status)
